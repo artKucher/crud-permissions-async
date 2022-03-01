@@ -1,0 +1,23 @@
+version: '3.9'
+services:
+  main-service:
+    container_name: main-service
+    command: tail -f /dev/null #flask run --host=0.0.0.0
+    build:
+      context: ./main-service
+      dockerfile: Dockerfile
+      args:
+        buildno: 1
+    image: main-service
+    env_file:
+      - ./main-service/.environment
+    volumes:
+      - ./main-service:/code
+    tty: true
+    ports:
+      - "5001:5000"
+
+networks:
+  default:
+    external:
+      name: core
