@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, Request
 from sqlmodel import SQLModel
+from starlette.middleware.cors import CORSMiddleware
 
 from config import settings
 from api.api_v1.api import api_router
@@ -11,6 +12,14 @@ application = FastAPI(
     description=settings.APP_DESCRIPTION,
     version=settings.APP_VERSION,
     openapi_url=f'{settings.API_V1_STR}/openapi.json',
+)
+
+application.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 application.include_router(api_router, prefix=settings.API_V1_STR)

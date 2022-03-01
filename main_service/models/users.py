@@ -1,27 +1,34 @@
 from typing import Optional
 
+from pydantic import validator
+from sqlalchemy import Column, BOOLEAN
 from sqlmodel import SQLModel, Field
+
+import utils
 
 
 class Token(SQLModel):
     access_token: str
     token_type: str
 
+class AuthCredentials(SQLModel):
+    username: str
+    password: str
 
-class TokenData(SQLModel):
-    username: Optional[str] = None
 
+class UserBase(SQLModel):
+    username: str
+    read_only: bool = Field(default=True, sa_column=Column(BOOLEAN, nullable=False))
 
-class User(SQLModel, table=True):
+class UserOutput(UserBase):
     id: Optional[int] = Field(default=None, primary_key=True, title='Идентификатор')
-    username: str
+
+class UserInput(UserBase):
     password: str
 
+    @validator('password')
+    def hash_password(cls, v, values, **kwargs):
+        return utils.authorization.get_password_hash(v)
 
-class UserInput(SQLModel):
-    username: str
-    password: str
-
-
-class UserInDB(User):
-    hashed_password: str
+class User(UserOutput, UserInput, table=True):
+    pass

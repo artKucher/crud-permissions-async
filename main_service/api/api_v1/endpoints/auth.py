@@ -10,7 +10,7 @@ from starlette import status
 
 from config import settings
 from db import get_session
-from models.users import UserInDB, User, UserInput
+from models.users import User, UserInput, AuthCredentials
 from utils.authorization import authenticate_user, create_access_token
 
 router = APIRouter(prefix='/auth')
@@ -19,7 +19,7 @@ router = APIRouter(prefix='/auth')
 @router.post(
     '/token', summary='',
 )
-async def token(credentials: UserInput,
+async def token(credentials: AuthCredentials,
                 session: Session = Depends(get_session)):
 
     user = authenticate_user(session, credentials.username, credentials.password)
