@@ -1,0 +1,4 @@
+/main_service/.environment
+/.idea/
+/main_service/sqlite.db
+/venv/

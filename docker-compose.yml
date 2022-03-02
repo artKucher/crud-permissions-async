@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  main-service:
+    container_name: main-service
+    command: python main.py
+    build:
+      context: main_service
+      dockerfile: Dockerfile
+      args:
+        buildno: 1
+    image: main-service
+    volumes:
+      - ./main_service:/code
+    tty: true
+    ports:
+      - "5003:5003"
