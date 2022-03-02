@@ -19,10 +19,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def verify_password(plain_password, hashed_password):
-    print(plain_password)
-    print(pwd_context.hash(plain_password))
     return pwd_context.verify(plain_password, hashed_password)
 
+def check_string_is_hash(value: str) -> bool:
+    return bool(pwd_context.identify(value))
 
 def get_password_hash(password):
     return pwd_context.hash(password)

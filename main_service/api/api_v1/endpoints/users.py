@@ -32,7 +32,7 @@ async def users_list(session: Session = Depends(get_session),
 @write_permission_required
 async def create(new_user: UserInput,
                  session: Session = Depends(get_session),
-                 _: User = Depends(get_current_user)):
+                 current_user: User = Depends(get_current_user)):
     new_user = User.validate(new_user)
 
     session.add(new_user)
@@ -48,12 +48,14 @@ async def create(new_user: UserInput,
 async def update_user(user_id: int,
                       updated_user: UserInput,
                       session: Session = Depends(get_session),
-                      _: User = Depends(get_current_user)):
+                      current_user: User = Depends(get_current_user)):
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     for key, value in updated_user.dict().items():
-        setattr(db_user, key, value)
+        print(value)
+        if value != '':
+            setattr(db_user, key, value)
     session.add(db_user)
     session.commit()
     return db_user
@@ -63,7 +65,7 @@ async def update_user(user_id: int,
 @write_permission_required
 async def delete_user(user_id: int,
                       session: Session = Depends(get_session),
-                      _: User = Depends(get_current_user)):
+                      current_user: User = Depends(get_current_user)):
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="Item not found")

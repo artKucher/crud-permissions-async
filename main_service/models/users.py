@@ -25,10 +25,12 @@ class UserOutput(UserBase):
 
 class UserInput(UserBase):
     password: str
-
     @validator('password')
     def hash_password(cls, v, values, **kwargs):
-        return utils.authorization.get_password_hash(v)
+        if not v or utils.authorization.check_string_is_hash(v):
+            return v
+        hash = utils.authorization.get_password_hash(v)
+        return hash
 
 class User(UserOutput, UserInput, table=True):
     pass

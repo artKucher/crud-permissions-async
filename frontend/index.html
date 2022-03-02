@@ -3,42 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <title>Система</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
 <body>
-<div class="form_container">
-	<div id="message"></div>
-	<form id="form">
-		<input id='username' type="text" name="username">
-		<input id='password' type="text" name="password">
-		<input type="submit" name="send" value="Отправить">
-	</form>
+
+<h1>Sign In</h1>
+<div class="input-group mb-3">
+	<input class="input-group-text" id='username' value="admin" type="text">
+</div>
+<div class="input-group mb-3">
+	<input class="input-group-text" id='password' value="admin" type="text">
+</div>
+<div class="input-group mb-3">
+	<button id="signin" class="btn btn-primary">SignIn</button>
 </div>
 </br>
+
+<h1>Create User</h1>
+<div class="input-group mb-3">
+	<input class="input-group-text" id='new_user_username' value="username" type="text">
+</div>
+<div class="input-group mb-3">
+	<input class="input-group-text" id='new_user_password' value="password" type="text">
+</div>
+<div class="input-group mb-3 form-check">
+	<input class="form-check-input" type="checkbox" value="" id="new_user_read_only">
+	<label class="form-check-label" for="new_user_read_only">Read Only</label>
+</div>
+<div class="input-group mb-3">
+	<button id="new_user_create" class="btn btn-primary">Create User</button>
+</div>
+</br>
+
+<h1>List of users</h1>
 <div>
-	<button id="reload_table">Reload Table</button>
-	<table class="flexme" id="table" border="1">
+	<button id="reload_table" class="btn btn-info" >Reload Table</button>
+	<table class="table" id="table">
 	  <thead>
 		<tr>
-		  <th width="100">id</th>
-		  <th width="100">username</th>
-		  <th width="100">read_only</th>
+		  <th scope="col">id</th>
+		  <th scope="col">username</th>
+		  <th scope="col">new_password</th>
+		  <th scope="col">read_only</th>
+		  <th scope="col">Save changes</th>
+		  <th scope="col">Delete element</th>
 		</tr>
 	  </thead>
-	  <tbody>
-		<tr id="test">
-		  <td></td>
-		</tr>
-	   </tbody>
+	  <tbody id="generated"></tbody>
 	</table>
-</div>
 
 
 
 
 <script>
+var backend_api_url = 'http://localhost:5003/api/v1'
 var settings = {
-                "url": "http://localhost:5003/api/v1",
+                "url": "",
                 "crossDomain": true,
                 "async": false,
                 "timeout": 0,
@@ -49,28 +73,100 @@ var settings = {
                 };
 
 // login
-$("#form").on("submit", function() {
-	settings['url'] += '/auth/token'
-	settings['method'] = 'POST'
-	settings['data'] = JSON.stringify({
+$("#signin").on("click", function() {
+	var request_settings = Object.assign({}, settings)
+	request_settings['url'] = backend_api_url+'/auth/token'
+	request_settings['method'] = 'POST'
+	request_settings['data'] = JSON.stringify({
                                         "username": $('#username').val(),
                                         "password": $('#password').val(),
                                         }),
-	$.ajax(settings)
+	$.ajax(request_settings)
 			.done(function (response) {
 										settings['headers']['Authorization'] = 'Bearer '+response['access_token']
-										alert(JSON.stringify(response));
 									})
 			.fail(function (jqXHR, textStatus, errorThrown) { alert(jqXHR['responseJSON']['detail']); });
 });
 
+// create new user
+$("#new_user_create").on("click", function(event) {
+	var request_settings = Object.assign({}, settings)
+	request_settings['url'] = `${backend_api_url}/users`
+	request_settings['method'] = 'POST'
+
+	var new_user_data = {
+		'username': $('#new_user_username').val(),
+		'read_only': $('#new_user_read_only').is(':checked'),
+		'password': $('#new_user_password').val(),
+	}
+
+	request_settings['data'] = JSON.stringify(new_user_data),
+	$.ajax(request_settings)
+			.done(function (response) { alert(JSON.stringify(response)) })
+			.fail(function (jqXHR, textStatus, errorThrown) { alert(JSON.stringify(jqXHR['responseJSON']['detail'])); });
+});
+
 // user list
 $("#reload_table").on("click", function() {
-	settings['url'] += '/users'
-	settings['method'] = 'GET'
-	$.ajax(settings)
-			.done(function (response) { alert(JSON.stringify(response));})
+	var request_settings = Object.assign({}, settings)
+	request_settings['url'] = backend_api_url+'/users'
+	request_settings['method'] = 'GET'
+	$.ajax(request_settings)
+			.done(function (response) {
+
+				$("#generated").empty()
+				var len = response.length;
+				for (var i = 0; i< len; i++) {
+
+					var id  = response[i].id;
+					var username  = response[i].username;
+					var checked  = response[i].read_only ? 'checked=true': '';
+
+					$("#generated").append(`<tr class="item_row" id="${id}">
+												<th scope="row" >${id} </th>
+												<td> <input class='username' id="${id}" value="${username}"> </td>
+												<td> <input class='new_password' id="${id}"> </td>
+												<td> <input class='read_only' type="checkbox" ${checked} id="${id}" ></input> </td>
+												<td> <button class='save_changes' id="${id}">💾</button> </td>
+												<td> <button class='delete_item' id="${id}">❌</button> </td>
+											</tr>`);
+				};
+
+
+			})
 			.fail(function (jqXHR, textStatus, errorThrown) { alert(jqXHR['responseJSON']['detail']); });
+});
+
+// save changes
+$("#generated").on("click", '.save_changes', function(event) {
+	var request_settings = Object.assign({}, settings)
+	request_settings['url'] = `${backend_api_url}/users/${event.target.id}`
+	request_settings['method'] = 'PATCH'
+
+	var new_user_data = {
+		'username': $(`#${event.target.id}.username`).val(),
+		'read_only': $(`#${event.target.id}.read_only`).is(':checked'),
+		'password': $(`#${event.target.id}.new_password`).val(),
+	}
+
+	request_settings['data'] = JSON.stringify(new_user_data),
+	$.ajax(request_settings)
+			.done(function (response) { alert(JSON.stringify(response)) })
+			.fail(function (jqXHR, textStatus, errorThrown) { alert(JSON.stringify(jqXHR['responseJSON']['detail'])); });
+});
+
+// delete item
+$("#generated").on("click", '.delete_item', function(event) {
+	var request_settings = Object.assign({}, settings)
+	request_settings['url'] = `${backend_api_url}/users/${event.target.id}`
+	request_settings['method'] = 'DELETE'
+
+	$.ajax(request_settings)
+			.done(function (response) {
+				$(`#${event.target.id}.item_row`).remove()
+				alert(JSON.stringify(response))
+			})
+			.fail(function (jqXHR, textStatus, errorThrown) { alert(JSON.stringify(jqXHR['responseJSON']['detail'])); });
 });
 
 </script>
