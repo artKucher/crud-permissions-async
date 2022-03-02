@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Система</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="card mx-auto w-25">
+    <div class="row">
+        <div class="col-sm-6">
+            <button class="btn btn-warning w-100" type="button" data-toggle="collapse" data-target="#first-task" aria-expanded="true" aria-controls="first-task">
+                First Task
+            </button>
+        </div>
+        <div class="col-sm-6">
+            <button class="btn btn-dark w-100" type="button" data-toggle="collapse" data-target="#second-task" aria-expanded="false" aria-controls="second-task">
+                Second Task
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card w-75 mx-auto collapse" id="first-task">
+    <div class="card card-body w-25 mx-auto m-3">
+        <h2 class="card-title mx-auto">Sign In</h2>
+        <div class="input-group mb-3">
+            <input class="input-group-text w-100" id='username' value="admin" type="text">
+        </div>
+        <div class="input-group mb-3">
+            <input class="input-group-text w-100" id='password' value="admin" type="text">
+        </div>
+        <div class="input-group mb-3">
+            <button id="signin" class="btn btn-primary w-100">Sign In</button>
+        </div>
+    </div>
+
+    <div class="card card-body w-25 mx-auto m-3">
+        <h2 class="card-title mx-auto">Create User</h2>
+        <div class="input-group mb-3">
+            <input class="input-group-text w-100" id='new-user-username' value="username" type="text">
+        </div>
+        <div class="input-group mb-3">
+            <input class="input-group-text w-100" id='new-user-password' value="password" type="text">
+        </div>
+        <div class="input-group mb-3 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="new-user-read-only">
+            <label class="form-check-label" for="new-user-read-only">Read Only</label>
+        </div>
+        <div class="input-group mb-3">
+            <button id="new-user-create" class="btn btn-primary w-100">Create User</button>
+        </div>
+    </div>
+    <div class="card card-body m-3 text-center">
+        <h2 class="card-title">List of users</h2>
+        <button id="reload-table" class="btn btn-info w-25 mx-auto m-3">Reload Table</button>
+        <div>
+            <table class="table" id="table">
+                <thead>
+                <tr>
+                    <th scope="col">id</th>
+                    <th scope="col">username</th>
+                    <th scope="col">new-password</th>
+                    <th scope="col">read-only</th>
+                    <th scope="col">Save changes</th>
+                    <th scope="col">Delete element</th>
+                </tr>
+                </thead>
+                <tbody id="generated"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card w-75 mx-auto collapse" id="second-task">
+    <div class="card card-body m-3">
+        <h2 class="card-title">List of ordered records</h2>
+        <button id="get-records" class="btn btn-info">Reload Table</button>
+        <div>
+            <table class="table" id="records-table">
+                <thead>
+                <tr>
+                    <th scope="col">id</th>
+                    <th scope="col">name</th>
+                </tr>
+                </thead>
+                <tbody id="records-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+	let backend_api_url = 'http://localhost:5003/api/v1'
+	let settings = {
+		"url": "",
+		"crossDomain": true,
+		"async": false,
+		"timeout": 0,
+		"headers": {
+			"Content-Type": "application/json",
+			"Access-Control-Allow-Headers": "*"
+		},
+	};
+
+	// login
+	$("#signin").on("click", function () {
+		let request_settings = Object.assign({}, settings)
+		request_settings['url'] = backend_api_url + '/auth/token'
+		request_settings['method'] = 'POST'
+		request_settings['data'] = JSON.stringify({
+			"username": $('#username').val(),
+			"password": $('#password').val(),
+		})
+
+        $.ajax(request_settings)
+            .done(function (response) {
+                settings['headers']['Authorization'] = 'Bearer ' + response['access_token']
+                alert(`Welcome ${$('#username').val()}`)
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.readyState === 4) {
+                    alert(JSON.stringify(jqXHR['responseJSON']['detail']));
+                } else if (jqXHR.readyState === 0) {
+                    alert('Network Error')
+                }
+            });
+	});
+
+	// create new user
+	$("#new-user-create").on("click", function (event) {
+		let request_settings = Object.assign({}, settings)
+		request_settings['url'] = `${backend_api_url}/users`
+		request_settings['method'] = 'POST'
+
+		let new_user_data = {
+			'username': $('#new-user-username').val(),
+			'read_only': $('#new-user-read-only').is(':checked'),
+			'password': $('#new-user-password').val(),
+		}
+
+		request_settings['data'] = JSON.stringify(new_user_data)
+
+        $.ajax(request_settings)
+            .done(function (response) {
+                alert(JSON.stringify(response))
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.readyState === 4) {
+                    alert(JSON.stringify(jqXHR['responseJSON']['detail']));
+                } else if (jqXHR.readyState === 0) {
+                    alert('Network Error')
+                }
+            });
+	});
+
+	// user list
+	$("#reload-table").on("click", function () {
+		let request_settings = Object.assign({}, settings)
+		request_settings['url'] = backend_api_url + '/users'
+		request_settings['method'] = 'GET'
+
+		$.ajax(request_settings)
+			.done(function (response) {
+
+				$("#generated").empty()
+				let len = response.length;
+				for (let i = 0; i < len; i++) {
+
+					let id = response[i].id;
+					let username = response[i].username;
+					let checked = response[i].read_only ? 'checked=true' : '';
+
+					$("#generated").append(`<tr class="item_row" id="${id}">
+											<th scope="row" >${id} </th>
+											<td> <input class='username' id="${id}" value="${username}"> </td>
+											<td> <input class='new-password' id="${id}"> </td>
+											<td> <input class='read-only' type="checkbox" ${checked} id="${id}" ></input> </td>
+											<td> <button class='save-changes' id="${id}">💾</button> </td>
+											<td> <button class='delete-item' id="${id}">❌</button> </td>
+										</tr>`);
+				}
+				;
+
+
+			})
+			.fail(function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.readyState === 4) {
+                    alert(JSON.stringify(jqXHR['responseJSON']['detail']));
+                } else if (jqXHR.readyState === 0) {
+                    alert('Network Error')
+                }
+			});
+	});
+
+	// save changes
+	$("#generated").on("click", '.save-changes', function (event) {
+		let request_settings = Object.assign({}, settings)
+		request_settings['url'] = `${backend_api_url}/users/${event.target.id}`
+		request_settings['method'] = 'PATCH'
+
+		let new_user_data = {
+			'username': $(`#${event.target.id}.username`).val(),
+			'read_only': $(`#${event.target.id}.read-only`).is(':checked'),
+			'password': $(`#${event.target.id}.new-password`).val(),
+		}
+
+		request_settings['data'] = JSON.stringify(new_user_data)
+
+        $.ajax(request_settings)
+            .done(function (response) {
+                alert(JSON.stringify(response))
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.readyState === 4) {
+                    alert(JSON.stringify(jqXHR['responseJSON']['detail']));
+                } else if (jqXHR.readyState === 0) {
+                    alert('Network Error')
+                }
+            });
+	});
+
+	// delete item
+	$("#generated").on("click", '.delete-item', function (event) {
+		let request_settings = Object.assign({}, settings)
+		request_settings['url'] = `${backend_api_url}/users/${event.target.id}`
+		request_settings['method'] = 'DELETE'
+
+		$.ajax(request_settings)
+			.done(function (response) {
+				$(`#${event.target.id}.item_row`).remove()
+				alert(JSON.stringify(response))
+			})
+			.fail(function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.readyState === 4) {
+                    alert(JSON.stringify(jqXHR['responseJSON']['detail']));
+                } else if (jqXHR.readyState === 0) {
+                    alert('Network Error')
+                }
+			});
+	});
+
+//////////////////////////////
+///////     TASK 2      //////
+//////////////////////////////
+
+//get records list
+$("#get-records").on("click", function () {
+    let request_settings = Object.assign({}, settings)
+    request_settings['url'] = backend_api_url + '/second-task/records'
+    request_settings['method'] = 'GET'
+
+    $.ajax(request_settings)
+        .done(function (response) {
+            $("#records-table-body").empty()
+            let len = response.length;
+            for (let i = 0; i < len; i++) {
+
+                let id = response[i].id;
+                let name = response[i].name;
+
+                $("#records-table-body").append(`<tr>
+                                                    <th scope="row">${id}</th>
+                                                    <td>${name}</td>
+                                                </tr>`);
+            }
+        })
+        .fail(function (jqXHR, textStatus, errorThrown) {
+            if (jqXHR.readyState === 4) {
+                alert(JSON.stringify(jqXHR['responseJSON']['detail']));
+            } else if (jqXHR.readyState === 0) {
+                alert('Network Error')
+            }
+        });
+});
+</script>
+</body>
+</html>
