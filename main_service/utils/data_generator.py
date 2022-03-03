@@ -7,7 +7,7 @@ from models.second_task import Record
 async def generate_records(ids_allocations: Tuple) -> List[Record]:
     result = []
     for ids_allocation in ids_allocations:
-        for id in range(*ids_allocation):
-            result.append(Record(id=id, name=str(uuid4())))
+        for record_id in range(*ids_allocation):
+            result.append(Record(id=record_id, name=str(uuid4())))
     random.shuffle(result)
     return result

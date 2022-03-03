@@ -13,6 +13,11 @@ from models.users import User
 
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="token")
+CREDENTIAL_EXCEPTION = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -52,19 +57,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 async def get_current_user(session: Session = Depends(get_session),
                            token: str = Depends(OAUTH2_SCHEME)) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHMS.HS256])
-        username: str = payload.get("sub")
+        username = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            raise CREDENTIAL_EXCEPTION
     except JWTError:
-        raise credentials_exception
+        raise CREDENTIAL_EXCEPTION
     user = get_user(session, username)
     if user is None:
-        raise credentials_exception
+        raise CREDENTIAL_EXCEPTION
     return user

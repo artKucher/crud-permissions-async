@@ -1,7 +1,7 @@
 # CRUD users + async ordering
 
 ---
-Видео демонстрация по [ссылке](https://drive.google.com/file/d/1Hqp2KfRDODbona7rVp3kPO07AItofnAv/view?usp=sharing)
+Видеодемонстрация по [ссылке](https://drive.google.com/file/d/1Hqp2KfRDODbona7rVp3kPO07AItofnAv/view?usp=sharing)
 
 Стек:
 - FastAPI
