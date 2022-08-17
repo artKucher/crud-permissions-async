@@ -1,48 +1,48 @@
 # CRUD users + async ordering
 
 ---
-Видеодемонстрация по [ссылке](https://drive.google.com/file/d/1Hqp2KfRDODbona7rVp3kPO07AItofnAv/view?usp=sharing)
+User flow demonstration on [link](https://drive.google.com/file/d/1Hqp2KfRDODbona7rVp3kPO07AItofnAv/view?usp=sharing)
 
-Стек:
+Stack:
 - FastAPI
 - SQLModel(Pydantic+SQLAlchemy)
 - SQLite
 - Docker
 
-Учётные данные стандартного пользователя: ***admin / admin***
+Default user: ***admin / admin***
 
-# При перезапуске проекта база данных полностью очищается и стандартный пользователь создаётся заново
+# Database fully restores and default user recreates on every project restart
 
 
-## Запуск в докере
+## Running in docker
 
-1) Сбилдите контейнер
+1) build the image
 ```
 make build
 ```
-2) Запустите проект
+2) run containers
 ```
 make run
 ```
-3) Убедитесь, что сервис запустился корректно
+3) Make sure it was started correct
 ```
 make logs
 ```
-4) Документация http://localhost:5003/docs
-5) Для запуска фронтенда откройте файл frontend/index.html в браузере
+4) Swagger documentation http://localhost:5003/docs
+5) For running frontend open ```frontend/index.html``` in browser
 
-## Запуск в venv
+## Running in venv
 
-1) Подготовьте окружение
+1) Prepare environment
 ```
 python3 -m venv venv
 source venv/bin/activate
 pip install -r main_service/requirements.txt
 ```
-2) Запустите проект
+2) Run the project
 ```
 cd main_service
 python main.py
 ```
-4) Документация http://localhost:5003/docs
-5) Для запуска фронтенда откройте файл frontend/index.html в браузере
+4) Swagger documentation  http://localhost:5003/docs
+5) For running frontend open ```frontend/index.html``` in browser
